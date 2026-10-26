@@ -1,0 +1,57 @@
+name: Build SAYYAR APK
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - ".github/workflows/build-apk.yml"
+      - "lib/**"
+      - "pubspec.yaml"
+      - "android_notes/**"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Get project
+        uses: actions/checkout@v4
+
+      - name: Install Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Prepare project and permissions
+        run: |
+          flutter create --platforms=android --project-name sayyar .
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path("android/app/src/main/AndroidManifest.xml")
+          s = p.read_text()
+          marker = '<uses-permission android:name="android.permission.INTERNET"/>'
+          additions = '''
+              <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+              <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>'''
+          if "android.permission.ACCESS_FINE_LOCATION" not in s:
+              s = s.replace(marker, marker + additions) if marker in s else s.replace("<application", marker + additions + "\n    <application", 1)
+          p.write_text(s)
+          PY
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Analyze project
+        run: flutter analyze
+
+      - name: Build APK
+        run: flutter build apk --debug
+
+      - name: Save APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: SAYYAR-APK
+          path: build/app/outputs/flutter-apk/app-debug.apk
