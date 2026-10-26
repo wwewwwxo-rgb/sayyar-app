@@ -408,7 +408,6 @@ class _SayyarHomeState extends State<SayyarHome> {
             if (routePoints.length > 1)
               PolylineLayer(polylines: [
                 Polyline(points: routePoints, strokeWidth: 9, color: Colors.black.withValues(alpha: 0.25)),
-                const Polyline(points: [], strokeWidth: 6, color: green),
               ]),
             if (routePoints.length > 1)
               PolylineLayer(polylines: [Polyline(points: routePoints, strokeWidth: 5, color: green)]),
